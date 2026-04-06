@@ -9,15 +9,13 @@ Manage skills from a curated remote catalog. Supports user-level and project-lev
 
 ## When this skill is triggered
 
-**Step 1: Locate the upgrade script.** The script is at `scripts/upgrade.py` relative to this skill's directory. Find it by searching **project-level directories first, then user-level**:
+**Step 1: Locate the upgrade script.** Find it by searching **project-level directories first, then user-level**:
 
 ```bash
 find .kiro/skills .claude/skills ~/.kiro/skills ~/.claude/skills -path "*/skill-upgrade-helper/scripts/upgrade.py" 2>/dev/null | head -1
 ```
 
-This order ensures that when running inside a project, the project-level copy is preferred over the user-level one.
-
-Save the result as `SCRIPT_PATH` for subsequent steps. If nothing is found, tell the user the skill-upgrade-helper is not installed.
+Save the result as `SCRIPT_PATH`. If nothing is found, tell the user the skill-upgrade-helper is not installed.
 
 **Step 2: Fetch current state.** Run:
 
@@ -30,6 +28,12 @@ uv run <SCRIPT_PATH> list --json
 ```json
 {
   "project_root": "/path/to/project or null",
+  "available_targets": [
+    {"label": "user (.claude)", "path": "/Users/foo/.claude/skills"},
+    {"label": "user (.kiro)", "path": "/Users/foo/.kiro/skills"},
+    {"label": "project (.claude)", "path": "/path/to/project/.claude/skills"},
+    {"label": "project (.kiro)", "path": "/path/to/project/.kiro/skills"}
+  ],
   "skills": {
     "skill-name": {
       "repo": "https://github.com/...",
@@ -38,6 +42,8 @@ uv run <SCRIPT_PATH> list --json
   }
 }
 ```
+
+`available_targets` lists every skills directory that exists on this machine. There may be 1 to 4 entries depending on which config dirs (`.claude`, `.kiro`) exist at user and project levels.
 
 **Step 4: Present ALL skills from the JSON to the user.** You MUST list every single skill from the `skills` object — do not skip or filter any. Format as a table:
 
@@ -60,22 +66,30 @@ Example:
 **Step 5: Ask the user two questions:**
 
 1. Which skills to install or update? (by number, name, or "all")
-2. Where to install? Only offer targets that apply:
-   - **User level** — always available
-   - **Project level** — only if `project_root` is not null
+2. Where to install? Present each entry from `available_targets` as a choice, showing the `label` field. Examples:
+   - If only one target exists, use it automatically without asking.
+   - If multiple targets exist (e.g. both `.claude` and `.kiro`), you MUST ask the user which one(s) to use. Do NOT pick one silently.
 
-**Step 6: Execute.** For each skill + target the user chose, run:
+**Step 6: Execute.** For each skill + target the user chose, run the update command using the `path` field from the chosen `available_targets` entry:
 
 ```bash
-uv run <SCRIPT_PATH> update <name> --target <user|project>
+uv run <SCRIPT_PATH> update <name> --target <path>
+```
+
+For example:
+
+```bash
+uv run <SCRIPT_PATH> update skill-creator --target /Users/foo/.kiro/skills
 ```
 
 Report results as each completes.
 
 ## Quick shortcut
 
-If the user's intent is unambiguous (e.g. "update all my skills"), skip the selection and run:
+If the user's intent is unambiguous (e.g. "update all my skills") AND there is only one available target, skip the selection and run:
 
 ```bash
-uv run <SCRIPT_PATH> update --all --target user
+uv run <SCRIPT_PATH> update --all --target <path>
 ```
+
+If there are multiple targets, still ask which one(s) to use before executing.

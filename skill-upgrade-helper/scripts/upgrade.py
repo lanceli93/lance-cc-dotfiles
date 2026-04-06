@@ -35,6 +35,22 @@ def _project_skills_dirs(project_root: Path) -> list[Path]:
     ]
 
 
+def _all_targets(project_root: Path | None) -> list[dict]:
+    """Return all available install targets with labels and paths."""
+    targets = []
+    home = Path.home()
+    for d in CONFIG_DIRS:
+        p = home / d / "skills"
+        if p.exists():
+            targets.append({"label": f"user ({d})", "path": str(p)})
+    if project_root:
+        for d in CONFIG_DIRS:
+            p = project_root / d / "skills"
+            if p.exists():
+                targets.append({"label": f"project ({d})", "path": str(p)})
+    return targets
+
+
 def fetch_registry() -> dict:
     """Fetch skill catalog from remote, fall back to local bundled copy."""
     try:
@@ -86,28 +102,6 @@ def scan_installed() -> dict[str, list[str]]:
     return found
 
 
-def _resolve_target(target: str) -> Path:
-    """Resolve a target label to an actual skills directory path.
-
-    For 'user': picks the first existing user-level skills dir, or defaults to ~/.claude/skills.
-    For 'project': picks the first existing project-level skills dir, or defaults to <root>/.claude/skills.
-    For absolute paths: appends the first matching config dir, or defaults to .claude/skills.
-    """
-    if target == "user":
-        dirs = _user_skills_dirs()
-        return dirs[0] if dirs else Path.home() / ".claude" / "skills"
-
-    if target == "project":
-        proj = find_project_root()
-        if not proj:
-            sys.exit("Not inside a git project.")
-        target = str(proj)
-
-    proj_path = Path(target)
-    pdirs = _project_skills_dirs(proj_path)
-    return pdirs[0] if pdirs else proj_path / ".claude" / "skills"
-
-
 def pull_skill(name: str, info: dict, target_dir: Path) -> bool:
     """Clone repo into a temp dir and copy the skill subdirectory to target."""
     dest = target_dir / name
@@ -148,6 +142,7 @@ def cmd_list(as_json: bool = False):
     if as_json:
         result = {
             "project_root": str(project_root) if project_root else None,
+            "available_targets": _all_targets(project_root),
             "skills": {},
         }
         for name in sorted(registry):
@@ -170,9 +165,12 @@ def cmd_list(as_json: bool = False):
 
 
 def cmd_update(name: str | None, target: str, all_: bool):
-    """Update one or all skills to the specified target."""
+    """Update one or all skills to the specified target.
+
+    target can be an absolute path to a skills directory (from available_targets).
+    """
     registry = fetch_registry()
-    td = _resolve_target(target)
+    td = Path(target)
 
     if all_:
         names = list(registry)
@@ -205,8 +203,8 @@ def main():
     up.add_argument("--all", action="store_true", dest="all_")
     up.add_argument(
         "--target",
-        default="user",
-        help="'user', 'project', or absolute path to project root",
+        required=True,
+        help="Absolute path to skills directory (from 'list --json' available_targets)",
     )
 
     args = p.parse_args()
