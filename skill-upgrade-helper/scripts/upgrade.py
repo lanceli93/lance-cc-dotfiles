@@ -63,7 +63,8 @@ def fetch_registry() -> dict:
 
 
 def find_project_root() -> Path | None:
-    """Find git root of the current working directory."""
+    """Find project root by checking for .git, .claude, or .kiro directories."""
+    # Try git first
     try:
         r = subprocess.run(
             ["git", "rev-parse", "--show-toplevel"],
@@ -74,6 +75,14 @@ def find_project_root() -> Path | None:
             return Path(r.stdout.strip())
     except Exception:
         pass
+
+    # Walk up from cwd looking for config dirs
+    cwd = Path.cwd().resolve()
+    for parent in [cwd, *cwd.parents]:
+        for d in CONFIG_DIRS:
+            if (parent / d).is_dir():
+                return parent
+
     return None
 
 
