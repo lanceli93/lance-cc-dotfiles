@@ -1,4 +1,4 @@
-# lance-cc-dotfiles
+# my-claude-home
 
 My Claude Code configurations and skills, for easy setup on new machines.
 
