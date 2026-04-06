@@ -20,6 +20,27 @@ skills/
 4. Copy or symlink `skills/*` to `~/.claude/skills/`
 5. Install community skills (see below)
 
+## Custom Skills
+
+Skills I built or customized. Each lives in its own repo for independent versioning.
+
+### aws-excalidraw-diagram
+
+- **Repo**: https://github.com/lanceli93/aws-excalidraw-diagram
+- **Install**: `git clone https://github.com/lanceli93/aws-excalidraw-diagram.git && cp -r aws-excalidraw-diagram/aws-excalidraw-diagram ~/.claude/skills/aws-excalidraw-diagram`
+- Generate Excalidraw architecture diagrams from natural language descriptions
+- Uses Chrome DevTools MCP for rendering (no Playwright needed)
+- Bundled AWS icon search/extract tool for `.excalidrawlib` integration
+- Based on [coleam00/excalidraw-diagram-skill](https://github.com/coleam00/excalidraw-diagram-skill)
+
+### aws-html-slides
+
+- **Repo**: https://github.com/lanceli93/aws-html-slides
+- **Install**: `git clone https://github.com/lanceli93/aws-html-slides.git && cp -r aws-html-slides/aws-html-slides ~/.claude/skills/aws-html-slides`
+- Create animation-rich HTML presentations from scratch or by converting PowerPoint files
+- 13 curated visual styles, zero dependencies (single HTML output)
+- Based on [zarazhangrui/frontend-slides](https://github.com/zarazhangrui/frontend-slides)
+
 ## Community Skills
 
 Third-party skills I use. Install via `git clone` into `~/.claude/skills/`.
