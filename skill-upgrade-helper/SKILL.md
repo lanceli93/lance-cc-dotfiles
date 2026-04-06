@@ -64,14 +64,13 @@ Example:
 | 5  | ui-ux-pro-max          | not installed      |
 ```
 
-**Step 5: Ask the user two questions:**
+**Step 5: Ask the user two questions (ALWAYS ask both, never skip):**
 
 1. Which skills to install or update? (by number, name, or "all")
-2. Where to install? Present the **filtered** targets as simple level choices:
-   - **User level** — if a `user (CONFIG_DIR)` target exists
-   - **Project level** — if a `project (CONFIG_DIR)` target exists
-   - If only one filtered target exists, use it automatically without asking.
-   - If both user and project targets exist, ask the user to choose.
+2. Where to install? Always present the level choices and let the user decide:
+   - **User level** — always available
+   - **Project level** — only show if a `project (CONFIG_DIR)` target exists in the filtered list
+   - Even if only one level exists, still ask the user to confirm.
 
 **Step 6: Execute.** For each skill + target the user chose, run the update command using the `path` field from the matching `available_targets` entry:
 
@@ -83,10 +82,4 @@ Report results as each completes.
 
 ## Quick shortcut
 
-If the user's intent is unambiguous (e.g. "update all my skills") AND there is only one filtered target, skip the selection and run:
-
-```bash
-uv run <SCRIPT_PATH> update --all --target <path>
-```
-
-If both user and project targets exist, still ask which level before executing.
+If the user's intent is unambiguous about WHICH skills (e.g. "update all my skills"), you may skip question 1. But ALWAYS ask question 2 (where to install) — never assume the level.
