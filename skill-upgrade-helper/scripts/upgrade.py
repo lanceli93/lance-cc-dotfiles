@@ -15,7 +15,24 @@ REGISTRY_URL = (
     "/main/skill-upgrade-helper/registry.json"
 )
 LOCAL_REGISTRY = Path(__file__).resolve().parent.parent / "registry.json"
-USER_SKILLS_DIR = Path.home() / ".claude" / "skills"
+
+# Supported config directory names (Claude uses .claude, Kiro uses .kiro, etc.)
+CONFIG_DIRS = [".claude", ".kiro"]
+
+
+def _user_skills_dirs() -> list[Path]:
+    """Return all existing user-level skills directories."""
+    home = Path.home()
+    return [home / d / "skills" for d in CONFIG_DIRS if (home / d / "skills").exists()]
+
+
+def _project_skills_dirs(project_root: Path) -> list[Path]:
+    """Return all existing project-level skills directories."""
+    return [
+        project_root / d / "skills"
+        for d in CONFIG_DIRS
+        if (project_root / d / "skills").exists()
+    ]
 
 
 def fetch_registry() -> dict:
@@ -45,33 +62,50 @@ def find_project_root() -> Path | None:
 
 
 def scan_installed() -> dict[str, list[str]]:
-    """Scan user and project skill dirs.
+    """Scan user and project skill dirs across all config directories.
 
     Returns {name: [loc, ...]} where loc is "user" or a project root path.
     """
     found: dict[str, list[str]] = {}
 
-    if USER_SKILLS_DIR.exists():
-        for d in USER_SKILLS_DIR.iterdir():
+    for sdir in _user_skills_dirs():
+        for d in sdir.iterdir():
             if d.is_dir() and (d / "SKILL.md").exists():
-                found.setdefault(d.name, []).append("user")
+                if "user" not in found.get(d.name, []):
+                    found.setdefault(d.name, []).append("user")
 
     proj = find_project_root()
     if proj:
-        pdir = proj / ".claude" / "skills"
-        if pdir.exists():
-            for d in pdir.iterdir():
+        for sdir in _project_skills_dirs(proj):
+            for d in sdir.iterdir():
                 if d.is_dir() and (d / "SKILL.md").exists():
-                    found.setdefault(d.name, []).append(str(proj))
+                    proj_str = str(proj)
+                    if proj_str not in found.get(d.name, []):
+                        found.setdefault(d.name, []).append(proj_str)
 
     return found
 
 
-def skills_dir_for(target: str) -> Path:
-    """Convert a target label to the actual skills directory path."""
+def _resolve_target(target: str) -> Path:
+    """Resolve a target label to an actual skills directory path.
+
+    For 'user': picks the first existing user-level skills dir, or defaults to ~/.claude/skills.
+    For 'project': picks the first existing project-level skills dir, or defaults to <root>/.claude/skills.
+    For absolute paths: appends the first matching config dir, or defaults to .claude/skills.
+    """
     if target == "user":
-        return USER_SKILLS_DIR
-    return Path(target) / ".claude" / "skills"
+        dirs = _user_skills_dirs()
+        return dirs[0] if dirs else Path.home() / ".claude" / "skills"
+
+    if target == "project":
+        proj = find_project_root()
+        if not proj:
+            sys.exit("Not inside a git project.")
+        target = str(proj)
+
+    proj_path = Path(target)
+    pdirs = _project_skills_dirs(proj_path)
+    return pdirs[0] if pdirs else proj_path / ".claude" / "skills"
 
 
 def pull_skill(name: str, info: dict, target_dir: Path) -> bool:
@@ -138,12 +172,7 @@ def cmd_list(as_json: bool = False):
 def cmd_update(name: str | None, target: str, all_: bool):
     """Update one or all skills to the specified target."""
     registry = fetch_registry()
-
-    if target == "project":
-        proj = find_project_root()
-        if not proj:
-            sys.exit("Not inside a git project.")
-        target = str(proj)
+    td = _resolve_target(target)
 
     if all_:
         names = list(registry)
@@ -152,7 +181,6 @@ def cmd_update(name: str | None, target: str, all_: bool):
     else:
         sys.exit("Specify a skill name or --all.")
 
-    td = skills_dir_for(target)
     ok = total = 0
     for n in names:
         if n not in registry:
