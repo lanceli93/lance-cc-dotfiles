@@ -1,2 +1,4 @@
-use uv for python
-agent teams sub agent always use 'opus' as model id
+- use uv for python
+- agent teams sub-agents always use model id 'opus'
+- GitHub identity: username `lanceli93`; for email-privacy repos commit as `23183165+lanceli93@users.noreply.github.com` (this account's GitHub repos only; don't change global git config)
+- browser tasks: use chrome-devtools MCP with `--autoConnect` to drive the running logged-in Chrome (reuse its session/tabs); `list_pages` then `select_page` the right tab — don't launch a blank browser

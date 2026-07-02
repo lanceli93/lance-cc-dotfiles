@@ -3,15 +3,25 @@
     "CLAUDE_CODE_USE_BEDROCK": "1",
     "AWS_REGION": "ap-northeast-1",
     "AWS_BEARER_TOKEN_BEDROCK": "<your-bedrock-api-key>",
-    "ANTHROPIC_MODEL": "global.anthropic.claude-opus-4-6-v1[1m]",
-    "ANTHROPIC_DEFAULT_OPUS_MODEL": "global.anthropic.claude-opus-4-6-v1[1m]",
-    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "global.anthropic.claude-opus-4-6-v1[1m]",
-    "CLAUDE_CODE_EFFORT_LEVEL": "high",
-    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "16000",
+    "ANTHROPIC_MODEL": "global.anthropic.claude-opus-4-8[1m]",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "global.anthropic.claude-opus-4-8[1m]",
+    "ANTHROPIC_DEFAULT_FABLE_MODEL": "global.anthropic.claude-fable-5[1m]",
+    "ANTHROPIC_DEFAULT_FABLE_MODEL_SUPPORTED_CAPABILITIES": "effort,xhigh_effort,max_effort,thinking,adaptive_thinking,interleaved_thinking",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "global.anthropic.claude-haiku-4-5-20251001-v1:0",
+    "CLAUDE_CODE_EFFORT_LEVEL": "xhigh",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL_SUPPORTED_CAPABILITIES": "effort,xhigh_effort,max_effort,thinking,adaptive_thinking,interleaved_thinking",
+    "CLAUDE_CODE_MAX_OUTPUT_TOKENS": "32000",
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
   },
-  "teammateMode": "auto",
   "permissions": {
-    "allow": []
-  }
+    "allow": [
+      "mcp__pencil"
+    ],
+    "defaultMode": "bypassPermissions"
+  },
+  "model": "opus",
+  "enabledPlugins": {},
+  "skipDangerousModePermissionPrompt": true,
+  "teammateMode": "tmux",
+  "skipAutoPermissionPrompt": true
 }
